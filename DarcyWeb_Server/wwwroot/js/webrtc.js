@@ -1,4 +1,4 @@
-﻿let socket = io("http://ictrobot.hknu.ac.kr:60000");
+﻿let socket = io("http://ictrobot.hknu.ac.kr:8089");
 
 let localVideo;
 let cameraButton;

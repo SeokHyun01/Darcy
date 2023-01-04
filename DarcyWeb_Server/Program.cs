@@ -50,9 +50,6 @@ builder.Services.AddSyncfusionBlazor();
 
 var app = builder.Build();
 
-// https 리다이렉트 비활성화
-app.UseHttpsRedirection();
-
 app.UseResponseCompression();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

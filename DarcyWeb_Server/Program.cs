@@ -15,7 +15,7 @@ Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("ODQ0Nzc5QDMyMzAy
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.UseUrls("http://*:8092");
+builder.WebHost.UseUrls("http://*:8092;https://*:8093");
 
 // Add services to the container.
 builder.Services.AddRazorPages();
@@ -59,7 +59,7 @@ if (!app.Environment.IsDevelopment())
 	app.UseHsts();
 }
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 

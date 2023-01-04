@@ -1,0 +1,155 @@
+﻿@page "/user/{userId:guid}/camera/{cameraId:int}"
+
+@inject ICameraRepository _cameraRepository
+@inject NavigationManager _navigationManager
+@inject IJSRuntime _jsRuntime
+@inject ILogger<CameraDetails> _logger
+
+@implements IAsyncDisposable
+
+
+@if (IsLoading)
+{
+	<div class="spinner-border text-primary" role="status"></div>
+}
+else
+{
+	@if (Camera != null)
+	{
+		<div>
+			<div id="localStream">
+				<video id="localVideo" autoplay playsinline width="400" height="400"></video>
+				<button id="mute" class="btn btn-primary"> Mute</button>
+				<button id="camera" class="btn btn-primary"> Turn Camera Off</button>
+				<select id="cameras" class="form-control-sm"></select>
+				<video id="remoteVideo" autoplay playsinline width="400" height="400"></video>
+			</div>
+
+			<input type="range" value="@Camera.Degree" min="0" max="180" step="1" disabled="@(!IsReceivedAck)" @onchange="(args)=>Send(args)" />
+		</div>
+		<button class="btn btn-primary" @onclick="()=>RedirectToCameras()"> 돌아가기</button>
+	}
+}
+
+
+
+@code {
+	[Parameter]
+	public Guid UserId { get; set; }
+
+	[Parameter]
+	public int CameraId { get; set; }
+
+	public bool IsLoading { get; set; }
+	public bool IsReceivedAck { get; set; } = true;
+
+	private IMqttClient? MqttClient { get; set; }
+	private CameraDTO Camera { get; set; } = new CameraDTO();
+
+
+	private void RedirectToCameras()
+	{
+		_navigationManager.NavigateTo(_navigationManager.ToAbsoluteUri($"/user/{UserId}/camera").ToString(), forceLoad: true);
+	}
+
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			await _jsRuntime.InvokeAsync<Task>("joinRoom", $"{UserId.ToString()}/{CameraId}");
+
+			var mqttFactory = new MqttFactory();
+
+			MqttClient = mqttFactory.CreateMqttClient();
+
+			var mqttClientOptions = new MqttClientOptionsBuilder()
+			.WithTcpServer("ictrobot.hknu.ac.kr", 8085)
+			//.WithTcpServer("192.168.56.1", 1883)
+			.Build();
+
+			MqttClient.ApplicationMessageReceivedAsync += async e =>
+				{
+					var payload = e.ApplicationMessage.Payload;
+
+					if (payload != null)
+					{
+						if (e.ApplicationMessage.Topic == $"camera/update/degree/ack")
+						{
+							var updateCamera = JsonSerializer.Deserialize<UpdateCameraDTO>(payload);
+							if (updateCamera != null)
+							{
+								if (updateCamera.CameraId == CameraId)
+								{
+									IsReceivedAck = true;
+									await InvokeAsync(StateHasChanged);
+								}
+							}
+						}
+
+						await Task.CompletedTask;
+					}
+				};
+
+			await MqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+
+			var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder()
+				.WithTopicFilter(
+				f =>
+				{
+					f.WithTopic($"camera/update/degree/ack");
+				})
+				.Build();
+
+			await MqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
+
+			IsLoading = true;
+			StateHasChanged();
+
+			Camera = await _cameraRepository.Get(CameraId);
+
+			IsLoading = false;
+			StateHasChanged();
+
+			var applicationMessage = new MqttApplicationMessageBuilder()
+					.WithTopic("call/start")
+					.WithPayload($"{UserId.ToString()}/{CameraId.ToString()}")
+					.Build();
+
+			await MqttClient.PublishAsync(applicationMessage, CancellationToken.None);
+		}
+	}
+
+
+	public async ValueTask DisposeAsync()
+	{
+		if (MqttClient != null && MqttClient.IsConnected)
+		{
+			await MqttClient.DisconnectAsync();
+		}
+	}
+
+
+	private async Task Send(ChangeEventArgs args)
+	{
+		var degree = int.Parse(args.Value.ToString());
+
+		var newCamera = new UpdateCameraDTO
+			{
+				CameraId = CameraId,
+				Degree = degree
+			};
+
+		var updateCamera = JsonSerializer.Serialize<UpdateCameraDTO>(newCamera);
+
+		var applicationMessage = new MqttApplicationMessageBuilder()
+			.WithTopic($"camera/update/degree/syn")
+			.WithPayload(updateCamera)
+			.Build();
+
+		await MqttClient.PublishAsync(applicationMessage, CancellationToken.None);
+
+		IsReceivedAck = false;
+		await InvokeAsync(StateHasChanged);
+	}
+}

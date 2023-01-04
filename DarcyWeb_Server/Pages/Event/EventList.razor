@@ -1,0 +1,112 @@
+﻿@page "/camera/{cameraId:int}/event"
+
+@inject IEventRepository _eventRepository
+
+
+<div class="row mt-4">
+    <div class="col-6">
+        <h4 class="card-title text-primary"> 이벤트 목록</h4>
+    </div>
+    <div class="col-12 p-3">
+        @if (Events.Any())
+        {
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th> Id</th>
+                        <th> Camera Id</th>
+                        <th> Image</th>
+                        <th> Details</th>
+                        <th> Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var evnt in Events)
+                    {
+                        <tr>
+                            <td>
+                                @evnt.EventHeader.Id
+                            </td>
+                            <td>
+                                @evnt.EventHeader.CameraId
+                            </td>
+                            <td>
+                                <img src="@($"data:image/jpeg;base64,{evnt.EventHeader.Image}")" height="255">
+                            </td>
+                            <td>
+                                @foreach (var detail in evnt.EventDetails)
+                                {
+                                    <ol>
+                                        <li>@detail.Left</li>
+                                        <li>@detail.Right</li>
+                                        <li>@detail.Top</li>
+                                        <li>@detail.Bottom</li>
+                                        <li>@detail.Label</li>
+                                    </ol>
+                                }
+                            </td>
+                            <td>
+                                <button class="btn btn-danger" @onclick="()=>HandleDelete(evnt.EventHeader.Id)"> 삭제</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            if (IsLoading)
+            {
+                <div class="spinner-border text-primary" role="status"></div>
+            }
+            else
+            {
+                <p>No recrods found.</p>
+            }
+        }
+    </div>
+</div>
+
+
+@code {
+    [Parameter]
+	public int CameraId { get; set; }
+
+    private IEnumerable<EventDTO> Events { get; set; } = new List<EventDTO>();
+    public bool IsLoading { get; set; }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadEvents();
+        }
+    }
+
+
+    private async Task LoadEvents()
+    {
+        IsLoading = true;
+        StateHasChanged();
+
+        Events = await _eventRepository.GetAllByCameraId(CameraId);
+
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+
+    private async Task HandleDelete(int eventId)
+    {
+        IsLoading = true;
+
+        if (eventId > 0 && eventId is not 0)
+        {
+            await _eventRepository.Delete(eventId);
+            await LoadEvents();
+        }
+
+        IsLoading = false;
+    }
+}

@@ -1,0 +1,233 @@
+﻿@page "/user/{userId:guid}/camera"
+
+@inject ICameraRepository _cameraRepository
+@inject NavigationManager _navigationManager
+@inject ILogger<CameraList> _logger
+
+@implements IAsyncDisposable
+
+
+<div class="row mt-4">
+	<div class="col-6">
+		<h4 class="card-title text-primary"> 카메라 목록</h4>
+	</div>
+	<div class="col-4 offset-2">
+		<NavLink href=@($"user/{UserId.ToString()}/camera/create") class="btn btn-primary form-control"> 카메라 생성하기</NavLink>
+	</div>
+	<div class="col-12 p-3">
+		@if (IsLoading)
+		{
+			<div class="spinner-border text-primary" role="status"></div>
+		}
+
+		else
+		{
+			@if (Cameras.Any())
+			{
+				<table class="table table-bordered">
+					<thead>
+						<tr>
+							<th> Name</th>
+							<th> Thumbnail</th>
+							<th> Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (var camera in Cameras)
+						{
+							<tr>
+								<td>
+									@camera.Name
+								</td>
+								<td>
+									@*<img src="@($"data:image/jpeg;base64,{camera.Thumbnail}")" height="255">*@
+									@*<NavLink href=@($"/user/{camera.UserId}/camera/{camera.Id}")>
+										<img src="@($"data:image/jpeg;base64,{camera.Thumbnail}")" height="255">
+									</NavLink>*@
+									<img type="button" src="@($"data:image/jpeg;base64,{camera.Thumbnail}")" height="255" @onclick="()=>RedirectToCall(camera.UserId, camera.Id)">
+								</td>
+								<td>
+									@*<SfQRCodeGenerator Value=@($"{_navigationManager.BaseUri}/user/{camera.UserId}/camera/{camera.Id}/register")>
+										<QRCodeGeneratorDisplayText Text="카메라 등록"></QRCodeGeneratorDisplayText>
+									</SfQRCodeGenerator>*@
+									<SfQRCodeGenerator Value=@($"{camera.UserId}/{camera.Id.ToString()}")></SfQRCodeGenerator>
+									@*<NavLink href="@($"user/{camera.UserId}/camera/{camera.Id}")" class="btn btn-primary"> 카메라 보기</NavLink>*@
+									<NavLink href=@($"camera/{camera.Id}/event") class="btn btn-primary"> 이벤트 관리</NavLink>
+									<button class="btn btn-danger" @onclick="()=>HandleDelete(camera.Id)"> 삭제</button>
+									<input type="range" value="@camera.Degree" min="0" max="180" step="1" disabled="@(!MqttClient.IsConnected)" @onchange="(args)=>Send(args, camera.Id)" />
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			}
+			else
+			{
+				<p>No recrods found.</p>
+			}
+		}
+	</div>
+</div>
+
+
+@code {
+	[Parameter]
+	public Guid UserId { get; set; }
+
+	public bool IsLoading { get; set; }
+	public bool IsReceivedAck { get; set; } = true;
+
+	private List<CameraDTO> Cameras { get; set; } = new List<CameraDTO>();
+	private IMqttClient? MqttClient { get; set; }
+
+
+	private void RedirectToCall(string userId, int cameraId)
+	{
+		_navigationManager.NavigateTo(_navigationManager.ToAbsoluteUri($"/user/{userId}/camera/{cameraId}").ToString(), forceLoad: true);
+	}
+
+
+	protected override async Task OnInitializedAsync()
+	{
+		_logger.LogInformation("OnInitializedAsync has been called.");
+	}
+
+
+	public async ValueTask DisposeAsync()
+	{
+		_logger.LogInformation("DisposeAsync has been called.");
+
+		if (MqttClient != null && MqttClient.IsConnected)
+		{
+			await MqttClient.DisconnectAsync();
+		}
+	}
+
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		_logger.LogInformation("OnAfterRenderAsync has been called.");
+
+		if (firstRender)
+		{
+			var mqttFactory = new MqttFactory();
+
+			MqttClient = mqttFactory.CreateMqttClient();
+
+			var mqttClientOptions = new MqttClientOptionsBuilder()
+				.WithTcpServer("ictrobot.hknu.ac.kr", 8085)
+				//.WithTcpServer("192.168.56.1", 1883)
+				.Build();
+
+			MqttClient.ApplicationMessageReceivedAsync += async e =>
+				{
+					var payload = e.ApplicationMessage.Payload;
+
+					if (payload != null)
+					{
+						if (e.ApplicationMessage.Topic == "camera/update/thumbnail")
+						{
+							UpdateCameraDTO? newCamera = JsonSerializer.Deserialize<UpdateCameraDTO>(payload);
+							if (newCamera is not null)
+							{
+								var index = Cameras.FindIndex(u => u.Id == newCamera.CameraId);
+								if (index != -1)
+								{
+									if (Cameras[index].Thumbnail != newCamera.Thumbnail)
+									{
+										Cameras[index].Thumbnail = newCamera.Thumbnail;
+										await InvokeAsync(StateHasChanged);
+									}
+								}
+							}
+						}
+
+						//else if (e.ApplicationMessage.Topic == "camera/update/degree/ack")
+						//{
+						//	var updateCamera = JsonSerializer.Deserialize<UpdateCameraDTO>(payload);
+						//	if (updateCamera != null)
+						//	{
+						//		IsReceivedAck = true;
+						//		await InvokeAsync(StateHasChanged);
+						//	}
+						//}
+					}
+
+					await Task.CompletedTask;
+				};
+
+			await MqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+
+			var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder()
+				.WithTopicFilter(
+				f =>
+				{
+					f.WithTopic("camera/update/thumbnail");
+				})
+				//.WithTopicFilter(
+				//f =>
+				//{
+				//	f.WithTopic("camera/update/degree/ack");
+				//})
+				.Build();
+
+			await MqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
+
+			await LoadCameras();
+		}
+	}
+
+
+	private async Task LoadCameras()
+	{
+		IsLoading = true;
+		StateHasChanged();
+
+		var cameras = (await _cameraRepository.GetAll(UserId.ToString())) as List<CameraDTO>;
+		if (cameras != null)
+		{
+			Cameras = cameras;
+		}
+
+		IsLoading = false;
+		StateHasChanged();
+	}
+
+
+	private async Task HandleDelete(int cameraId)
+	{
+		IsLoading = true;
+
+		if (cameraId > 0 && cameraId is not 0)
+		{
+			await _cameraRepository.Delete(cameraId);
+			await LoadCameras();
+		}
+
+		IsLoading = false;
+	}
+
+
+	private async Task Send(ChangeEventArgs args, int cameraId)
+	{
+		var degree = int.Parse(args.Value.ToString());
+
+		var newCamera = new UpdateCameraDTO
+			{
+				CameraId = cameraId,
+				Degree = degree
+			};
+
+		var updateCamera = JsonSerializer.Serialize<UpdateCameraDTO>(newCamera);
+
+		var applicationMessage = new MqttApplicationMessageBuilder()
+			.WithTopic("camera/update/degree/syn")
+			.WithPayload(updateCamera)
+			.Build();
+
+		await MqttClient.PublishAsync(applicationMessage, CancellationToken.None);
+
+		IsReceivedAck = false;
+		await InvokeAsync(StateHasChanged);
+	}
+}

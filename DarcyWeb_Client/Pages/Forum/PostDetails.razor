@@ -1,0 +1,150 @@
+﻿@page "/post/{id:int}"
+
+@inject IForumService _forumService
+@inject NavigationManager _navigationManager
+@inject ILocalStorageService _localStorage
+
+<div class="h-100 p-5 bg-light border rounded-4 mb-4">
+	<h2>댓글을 달아주세요</h2>
+	<EditForm Model="CommentRequestDTO" OnValidSubmit="InsertComment">
+		<DataAnnotationsValidator />
+		<div class="form-group py-2">
+			<InputText @bind-Value="CommentRequestDTO.Text" class="form-control"></InputText>
+			<ValidationMessage For="()=>CommentRequestDTO.Text"></ValidationMessage>
+		</div>
+		<div class="form-group py-4">
+			<button class="btn btn-outline-secondary">@Action</button>
+		</div>
+	</EditForm>
+</div>
+
+@if (IsLoading)
+{
+	<div class="spinner-border text-primary" role="status"></div>
+}
+else
+{
+	@if (Post is not null)
+	{
+		<div class="p-5 mb-4 bg-light rounded-4 mb-4">
+			<div class="container-fluid py-5">
+				<h1 class="display-6 fw-bold">
+					@Post.Title
+				</h1>
+				<p class="col-md-8 mt-2 mb-0">@Post.Created</p>
+				<p class="col-md-8 mb-2">@Post.UserName</p>
+				<p class="col-md-8 fs-4 mb-2">@Post.Text</p>
+				<p class="col-md-8 mb-0">@Post.Status</p>
+				<p class="col-md-8 mb-2">@Post.Personnel</p>
+			</div>
+		</div>
+
+		@if (Comments.Any())
+		{
+			@foreach (var comment in Comments)
+			{
+				<div class="col-12 d-inline-flex justify-content-center mb-4">
+					<div class="h-100 p-5 text-bg-dark rounded-4 col-6">
+						<h2>
+							@comment.Text
+						</h2>
+						<p>
+							@comment.Created
+						</p>
+						<p>
+							@comment.UserName
+						</p>
+						<p>
+							@comment.Like
+						</p>
+					</div>
+				</div>
+			}
+		}
+	}
+}
+
+
+@code {
+	[Parameter]
+	public int Id { get; set; }
+
+	public bool IsLoading { get; set; }
+	public bool ShowErrors { get; set; }
+
+	public string Action { get; set; } = "게시하기";
+	public string Errors { get; set; }
+
+	private UserDTO User { get; set; }
+	private PostDTO Post { get; set; }
+	private CommentRequestDTO CommentRequestDTO { get; set; } = new CommentRequestDTO();
+	private IEnumerable<CommentDTO> Comments { get; set; }
+
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			await LoadPost();
+		}
+
+	}
+
+	private async Task LoadComments()
+	{
+		IsLoading = true;
+		StateHasChanged();
+
+		Comments = await _forumService.GetAllComments(Id);
+
+		IsLoading = false;
+		StateHasChanged();
+	}
+
+	private async Task LoadPost()
+	{
+		IsLoading = true;
+		StateHasChanged();
+
+		Post = await _forumService.GetPost(Id);
+		Comments = Post.Comments;
+
+		IsLoading = false;
+		StateHasChanged();
+	}
+
+
+	private async Task InsertComment()
+	{
+		IsLoading = true;
+		ShowErrors = false;
+		StateHasChanged();
+
+		if (await _localStorage.GetItemAsync<UserDTO>(SD.Local_UserDetails) != null)
+		{
+			User = await _localStorage.GetItemAsync<UserDTO>(SD.Local_UserDetails);
+		}
+
+		CommentRequestDTO.UserName = User.Email;
+		CommentRequestDTO.Created = DateTime.Now;
+		CommentRequestDTO.PostId = Id;
+
+		// Create
+		var result = await _forumService.Comment(CommentRequestDTO);
+
+		if (result.IsSuccessful)
+		{
+			await LoadComments();
+		}
+
+		else
+		{
+			// Failure
+			Errors = result.Error;
+
+			IsLoading = false;
+			ShowErrors = true;
+			StateHasChanged();
+		}
+	}
+}

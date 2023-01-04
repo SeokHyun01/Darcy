@@ -1,0 +1,61 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33103.184
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Darcy_Business", "Darcy_Business\Darcy_Business.csproj", "{AAB60E63-C96D-4A7C-AF22-5E0DA62A78B0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Darcy_Common", "Darcy_Common\Darcy_Common.csproj", "{6BCCB50E-EB44-443A-8D20-336567989688}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Darcy_Models", "Darcy_Models\Darcy_Models.csproj", "{057ECBD2-5A12-4B00-B0E1-1DA67F0CED79}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DarcyWeb_API", "DarcyWeb_API\DarcyWeb_API.csproj", "{AD6A5EA8-61CD-431F-9D8E-3A410397C94F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DarcyWeb_Client", "DarcyWeb_Client\DarcyWeb_Client.csproj", "{1F543AAF-D100-4DC2-9253-0182F15066E4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Darcy_DataAccess", "Darcy_DataAccess\Darcy_DataAccess.csproj", "{D4DBDA6C-9351-402C-A8D5-25ED93B54DCF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DarcyWeb_Server", "DarcyWeb_Server\DarcyWeb_Server.csproj", "{B1D4BD85-0B0D-488C-A0DB-F80CB187211D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AAB60E63-C96D-4A7C-AF22-5E0DA62A78B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AAB60E63-C96D-4A7C-AF22-5E0DA62A78B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AAB60E63-C96D-4A7C-AF22-5E0DA62A78B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AAB60E63-C96D-4A7C-AF22-5E0DA62A78B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BCCB50E-EB44-443A-8D20-336567989688}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BCCB50E-EB44-443A-8D20-336567989688}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BCCB50E-EB44-443A-8D20-336567989688}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BCCB50E-EB44-443A-8D20-336567989688}.Release|Any CPU.Build.0 = Release|Any CPU
+		{057ECBD2-5A12-4B00-B0E1-1DA67F0CED79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{057ECBD2-5A12-4B00-B0E1-1DA67F0CED79}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{057ECBD2-5A12-4B00-B0E1-1DA67F0CED79}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{057ECBD2-5A12-4B00-B0E1-1DA67F0CED79}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD6A5EA8-61CD-431F-9D8E-3A410397C94F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD6A5EA8-61CD-431F-9D8E-3A410397C94F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD6A5EA8-61CD-431F-9D8E-3A410397C94F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD6A5EA8-61CD-431F-9D8E-3A410397C94F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F543AAF-D100-4DC2-9253-0182F15066E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F543AAF-D100-4DC2-9253-0182F15066E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F543AAF-D100-4DC2-9253-0182F15066E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F543AAF-D100-4DC2-9253-0182F15066E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4DBDA6C-9351-402C-A8D5-25ED93B54DCF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4DBDA6C-9351-402C-A8D5-25ED93B54DCF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4DBDA6C-9351-402C-A8D5-25ED93B54DCF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4DBDA6C-9351-402C-A8D5-25ED93B54DCF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1D4BD85-0B0D-488C-A0DB-F80CB187211D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1D4BD85-0B0D-488C-A0DB-F80CB187211D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1D4BD85-0B0D-488C-A0DB-F80CB187211D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1D4BD85-0B0D-488C-A0DB-F80CB187211D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {620713AE-656D-4B90-8267-24E46E0DD765}
+	EndGlobalSection
+EndGlobal

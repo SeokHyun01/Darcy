@@ -1,0 +1,69 @@
+﻿<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+	<div class="container-fluid">
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarSupportedContent">
+			<div class="col-2">
+				<ul class="navbar-nav">
+					<li class="nav-item p-0">
+						<NavLink class="nav-link mx-2" href="#">
+							<span class="p-2">
+								Home
+							</span>
+						</NavLink>
+					</li>
+					<li class="nav-item p-0">
+						<NavLink class="nav-link mx-2" href="post">
+							<span class="p-2">
+								Forum
+							</span>
+						</NavLink>
+					</li>
+				</ul>
+			</div>
+			<div class="col-10">
+				<ul class="navbar-nav justify-content-end">
+					<AuthorizeView>
+						<Authorized>
+							<li class="nav-item p-0">
+								<NavLink class="nav-link mx-2" href="#">
+									<span class="p-2">
+										Hello, @context.User.Identity.Name
+									</span>
+								</NavLink>
+							</li>
+							<li class="nav-item p-0">
+								<NavLink class="nav-link mx-2" href="logout">
+									<span class="p-2">
+										Logout
+									</span>
+								</NavLink>
+							</li>
+						</Authorized>
+						<NotAuthorized>
+							<li class="nav-item p-0">
+								<NavLink class="nav-link mx-2" href="signup">
+									<span class="p-2">
+										Register
+									</span>
+								</NavLink>
+							</li>
+							<li class="nav-item p-0">
+								<NavLink class="nav-link mx-2" href="login">
+									<span class="p-2">
+										Login
+									</span>
+								</NavLink>
+							</li>
+						</NotAuthorized>
+					</AuthorizeView>
+				</ul>
+			</div>
+		</div>
+	</div>
+</nav>
+
+@code {
+
+}

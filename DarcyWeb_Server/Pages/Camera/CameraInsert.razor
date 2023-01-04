@@ -1,0 +1,61 @@
+﻿@page "/user/{userId:guid}/camera/create"
+
+@inject ICameraRepository _cameraRepository
+@inject NavigationManager _navigationManager
+
+@attribute [Authorize(Roles = SD.Role_Admin)]
+
+@if (IsLoading)
+{
+	<div class="spinner-border text-primary" role="status"></div>
+}
+else
+{
+	@if (ShowErrors)
+	{
+		<div>
+			@foreach (var error in Errors)
+			{
+				<p class="text-danger text-center">@error</p>
+			}
+		</div>
+	}
+
+	<EditForm Model="Camera" OnValidSubmit="InsertCamera">
+		<DataAnnotationsValidator />
+		<div class="form-group py-2">
+			<label> 이름</label>
+			<InputText @bind-Value="Camera.Name" class="form-control"></InputText>
+			<ValidationMessage For="()=>Camera.Name"></ValidationMessage>
+		</div>
+		<div class="form-group py-4">
+			<button class="btn btn-primary">@Action</button>
+		</div>
+	</EditForm>
+}
+
+@code {
+	[Parameter]
+	public Guid UserId { get; set; }
+
+	public bool IsLoading { get; set; }
+	public bool ShowErrors { get; set; } = false;
+
+	public string Action { get; set; } = "생성하기";
+	public string Errors { get; set; }
+
+	public CameraDTO Camera { get; set; } = new();
+
+	private async void InsertCamera()
+	{
+		IsLoading = true;
+		ShowErrors = false;
+		StateHasChanged();
+
+		Camera.UserId = UserId.ToString();
+		Camera.Thumbnail = SD.Default_Thumbnail;
+
+		await _cameraRepository.Create(Camera);
+		_navigationManager.NavigateTo($"user/{Camera.UserId}/camera");
+	}
+}

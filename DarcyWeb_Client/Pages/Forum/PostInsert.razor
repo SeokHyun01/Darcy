@@ -1,0 +1,122 @@
+﻿@page "/post/create"
+
+@inject IForumService _forumService
+@inject NavigationManager _navigationManager
+@inject ILocalStorageService _localStorage
+
+@attribute [Authorize]
+
+
+@if (IsLoading)
+{
+	<div class="spinner-border text-primary" role="status"></div>
+}
+else
+{
+	@if (ShowErrors)
+	{
+		<div>
+			@foreach (var error in Errors)
+			{
+				<p class="text-danger text-center">@error</p>
+			}
+		</div>
+	}
+
+	<div class="h-100 p-5 bg-light border rounded-4 mb-4">
+		<EditForm Model="PostRequestDTO" OnValidSubmit="InsertPost">
+			<DataAnnotationsValidator />
+			<div class="form-group py-2">
+				<label>제목</label>
+				<InputText @bind-Value="PostRequestDTO.Title" class="form-control"></InputText>
+				<ValidationMessage For="()=>PostRequestDTO.Title"></ValidationMessage>
+			</div>
+			<div class="form-group py-2">
+				<label>본문</label>
+				<InputText @bind-Value="PostRequestDTO.Text" class="form-control"></InputText>
+				<ValidationMessage For="()=>PostRequestDTO.Text"></ValidationMessage>
+			</div>
+			<div class="form-group py-2">
+				<label>모집 인원 수</label>
+				<InputNumber @bind-Value="PostRequestDTO.Personnel" class="form-control"></InputNumber>
+				<ValidationMessage For="()=>PostRequestDTO.Personnel"></ValidationMessage>
+			</div>
+			<div class="form-group py-4">
+				<button class="btn btn-outline-secondary">@Action</button>
+				<NavLink href="post" class="btn btn-secondary mx-2">Back to Index</NavLink>
+			</div>
+		</EditForm>
+	</div>
+
+	@if (ShowErrors)
+	{
+		<p class="text-center text-danger">@Errors</p>
+	}
+}
+
+
+@code {
+
+	[Parameter]
+	public int Id { get; set; }
+
+	private PostRequestDTO PostRequestDTO { get; set; } = new PostRequestDTO();
+	private UserDTO User { get; set; }
+
+	public string Action { get; set; } = "게시하기";
+	public string Errors { get; set; }
+
+	public bool IsLoading { get; set; }
+	public bool ShowErrors { get; set; } = false;
+
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+		}
+	}
+
+	private async Task InsertPost()
+	{
+		IsLoading = true;
+		ShowErrors = false;
+		StateHasChanged();
+
+		if (await _localStorage.GetItemAsync<UserDTO>(SD.Local_UserDetails) is not null)
+		{
+			User = await _localStorage.GetItemAsync<UserDTO>(SD.Local_UserDetails);
+
+			PostRequestDTO.UserName = User.Email;
+			PostRequestDTO.Created = DateTime.Now;
+			PostRequestDTO.Status = SD.Status_Open;
+
+			// Create
+			var result = await _forumService.Post(PostRequestDTO);
+
+			if (result.IsSuccessful)
+			{
+				_navigationManager.NavigateTo("/post");
+			}
+
+			else
+			{
+				// Failure
+				Errors = result.Error;
+
+				IsLoading = false;
+				ShowErrors = true;
+				StateHasChanged();
+			}
+
+		} else
+		{
+			// Failure
+			Errors = "이 포스트를 작성한 유저를 찾을 수 없습니다.";
+
+			IsLoading = false;
+			ShowErrors = true;
+			StateHasChanged();
+		}
+	}
+}

@@ -1,0 +1,92 @@
+﻿@page "/user"
+
+@inject UserManager<IdentityUser> _userManager
+@inject NavigationManager _navigationManager
+
+@attribute [Authorize(Roles = SD.Role_Admin)]
+
+
+<div class="row mt-4">
+    <div class="col-6">
+        <h4 class="card-title text-primary"> 유저 목록</h4>
+    </div>
+    <div class="col-12 p-3">
+        @if (Users.Any())
+        {
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th> Id</th>
+                        <th> Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Users)
+                    {
+                        <tr>
+                            <td>
+                                @user.UserName
+                            </td>
+                            <td>
+                                <NavLink href=@($"user/{user.Id}/camera") class="btn btn-primary"> 카메라 관리하기</NavLink>
+                                <button class="btn btn-danger" @onclick="()=>HandleDelete(user)"> 삭제</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            if (IsLoading)
+            {
+                <div class="spinner-border text-primary" role="status"></div>
+            }
+            else
+            {
+                <p>No recrods found.</p>
+            }
+        }
+    </div>
+</div>
+
+
+@code {
+    private IEnumerable<IdentityUser> Users { get; set; } = new List<IdentityUser>();
+    public bool IsLoading { get; set; }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadUsers();
+        }
+    }
+
+
+    private async Task LoadUsers()
+    {
+        IsLoading = true;
+        StateHasChanged();
+
+        Users = await _userManager.GetUsersInRoleAsync(SD.Role_Client);
+
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+
+    private async Task HandleDelete(IdentityUser user)
+    {
+        IsLoading = true;
+
+        if (user is not null)
+        {
+            await _userManager.DeleteAsync(user);
+            await LoadUsers();
+        }
+
+        IsLoading = false;
+    }
+}

@@ -1,0 +1,30 @@
+﻿@page "/user/{userId:guid}/camera/{cameraId:int}/register"
+
+@inject IJSRuntime _jsRuntime
+
+<div id="call">
+	<div id="localStream">
+		<video id="localVideo" autoplay width="400" height="400"></video>
+		<button id="mute" class="btn btn-primary"> Mute</button>
+		<button id="camera" class="btn btn-primary"> Turn Camera Off</button>
+		<select id="cameras" class="form-control-sm"></select>
+		<video id="remoteVideo" autoplay playsinline width="400" height="400"></video>
+	</div>
+</div>
+
+
+@code {
+	[Parameter]
+	public Guid UserId { get; set; }
+
+	[Parameter]
+	public int CameraId { get; set; }
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			await _jsRuntime.InvokeAsync<Task>("joinRoom", $"{UserId.ToString()}/{CameraId}");
+		}
+	}
+}

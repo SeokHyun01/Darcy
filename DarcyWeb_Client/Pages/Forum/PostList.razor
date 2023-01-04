@@ -1,0 +1,76 @@
+﻿@page "/post"
+
+@inject NavigationManager _navigationManager
+@inject IForumService _forumService
+
+@attribute [Authorize]
+
+<section class="py-5 text-center container">
+	<div class="row py-lg-5">
+		<div class="col-lg-6 col-md-8 mx-auto">
+			<h1 class="fw-light">Forum</h1>
+			<p class="text-muted mb-0">
+				단풍 든 숲속에 두 갈래 길이 있더군요.
+			</p>
+			<p class="text-muted">
+				몸이 하나니 두 길을 다 가 볼 수는 없어 나는 서운한 마음으로 한참 서서 잣나무 숲속으로 접어든 한쪽 길을 끝 간 데까지 바라보았습니다.
+			</p>
+			<p>
+				<a href="post/create" class="btn btn-primary my-2">글쓰기 </a>
+			</p>
+		</div>
+	</div>
+</section>
+
+@if (IsLoading)
+{
+	<div class="spinner-border text-primary" role="status"></div>
+}
+else
+{
+	@if (Posts.Any())
+	{
+		@foreach (var post in Posts)
+		{
+			<div class="p-5 mb-4 bg-light rounded-4">
+				<div class="container-fluid py-5">
+					<NavLink href=@($"post/{post.Id}") class="display-6 fw-bold">
+						<span>
+							@post.Title
+						</span>
+					</NavLink>
+					<p class="col-md-8 mt-2 mb-0">@post.Created</p>
+					<p class="col-md-8 mb-2">@post.UserName</p>
+					<p class="col-md-8 fs-4">@post.Text</p>
+				</div>
+			</div>
+		}
+	}
+}
+
+
+@code {
+	private IEnumerable<PostDTO> Posts { get; set; } = new List<PostDTO>();
+	public bool IsLoading { get; set; }
+
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (firstRender)
+		{
+			await LoadPosts();
+		}
+	}
+
+
+	private async Task LoadPosts()
+	{
+		IsLoading = true;
+		StateHasChanged();
+
+		Posts = await _forumService.GetAllPosts();
+
+		IsLoading = false;
+		StateHasChanged();
+	}
+}

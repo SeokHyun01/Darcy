@@ -1,0 +1,85 @@
+﻿@page "/login"
+
+@inject NavigationManager _navigationManager
+@inject IAuthenticationService _authSerivce
+
+
+<EditForm Model="SignInRequest" OnValidSubmit="LoginUser">
+	<DataAnnotationsValidator />
+	<div class="py-4">
+		<div class=" row form-group ">
+			<div class="col-6 offset-3 ">
+				<div class="card border">
+					<div class="card-body px-lg-5 pt-4">
+						<h3 class="col-12 text-success text-center py-2">
+							<strong>Sign In</strong>
+						</h3>
+
+						@if (ShowSignInErrors)
+						{
+							<p class="text-center text-danger">@Errors</p>
+						}
+
+						<div class="py-2">
+							<InputText @bind-Value="SignInRequest.UserName" id="email" placeholder="Email..." class="form-control mb-2" />
+							<ValidationMessage For="(()=>SignInRequest.UserName)"></ValidationMessage>
+						</div>
+						<div class="py-2">
+							<InputText @bind-Value="SignInRequest.Password" type="password" placeholder="Password..." id="password" class="form-control mb-2" />
+							<ValidationMessage For="(()=>SignInRequest.Password)"></ValidationMessage>
+						</div>
+						<div class="py-2">
+							<button type="submit" class="btn btn-success btn-block"><i class="bi bi-person-bounding-box"></i> Sign in</button>
+							<a href="/register" class="btn btn-primary text-white m-2"><i class="bi bi-person-plus-fill"></i> Sign up</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</EditForm>
+
+
+@code {
+	private SignInRequestDTO SignInRequest = new();
+	public bool IsProcessing { get; set; } = false;
+	public bool ShowSignInErrors { get; set; }
+	public string Errors { get; set; }
+
+	public string ReturnUrl { get; set; }
+	private async Task LoginUser()
+	{
+		ShowSignInErrors = false;
+		IsProcessing = true;
+		
+		var result = await _authSerivce.Login(SignInRequest);
+
+		if (result.IsAuthSuccessful)
+		{
+			//regiration is successful
+			var absoluteUri = new Uri(_navigationManager.Uri);
+			var queryParam = HttpUtility.ParseQueryString(absoluteUri.Query);
+
+			ReturnUrl = queryParam["returnUrl"];
+		
+			if (string.IsNullOrEmpty(ReturnUrl))
+			{
+				_navigationManager.NavigateTo("/");
+			}
+			
+			else
+			{
+				_navigationManager.NavigateTo("/" + ReturnUrl);
+			}
+		}
+
+		else
+		{
+			//failure
+			Errors = result.ErrorMessage;
+			ShowSignInErrors = true;
+
+		}
+		IsProcessing = false;
+	}
+}

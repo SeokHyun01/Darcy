@@ -47,8 +47,22 @@ else
 	private CameraDTO Camera { get; set; } = new CameraDTO();
 
 
-	private void RedirectToCameras()
+	private async Task RedirectToCameras()
 	{
+		var callBody = new CallBody
+			{
+				UserId = UserId.ToString(),
+				CameraId = CameraId
+			};
+		var call = JsonSerializer.Serialize<CallBody>(callBody);
+
+		var applicationMessage = new MqttApplicationMessageBuilder()
+					.WithTopic("call/stop")
+					.WithPayload(call)
+					.Build();
+
+		await MqttClient.PublishAsync(applicationMessage, CancellationToken.None);
+
 		_navigationManager.NavigateTo(_navigationManager.ToAbsoluteUri($"/user/{UserId}/camera").ToString(), forceLoad: true);
 	}
 
@@ -134,17 +148,17 @@ else
 	{
 		var degree = int.Parse(args.Value.ToString());
 
-		var newCamera = new UpdateCameraDTO
+		var updateCamera = new UpdateCameraDTO
 			{
 				CameraId = CameraId,
 				Degree = degree
 			};
 
-		var updateCamera = JsonSerializer.Serialize<UpdateCameraDTO>(newCamera);
+		var camera = JsonSerializer.Serialize<UpdateCameraDTO>(updateCamera);
 
 		var applicationMessage = new MqttApplicationMessageBuilder()
 			.WithTopic($"camera/update/degree/syn")
-			.WithPayload(updateCamera)
+			.WithPayload(camera)
 			.Build();
 
 		await MqttClient.PublishAsync(applicationMessage, CancellationToken.None);

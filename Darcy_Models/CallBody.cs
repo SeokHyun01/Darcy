@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace Darcy_Models
 {
-	internal class CallBody
+	public class CallBody
 	{
+		public string UserId { get; set; }
+		public int CameraId { get; set; }
 	}
 }

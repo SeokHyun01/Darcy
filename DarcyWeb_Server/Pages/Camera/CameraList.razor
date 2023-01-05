@@ -54,7 +54,7 @@
 									@*<NavLink href="@($"user/{camera.UserId}/camera/{camera.Id}")" class="btn btn-primary"> 카메라 보기</NavLink>*@
 									<NavLink href=@($"camera/{camera.Id}/event") class="btn btn-primary"> 이벤트 관리</NavLink>
 									<button class="btn btn-danger" @onclick="()=>HandleDelete(camera.Id)"> 삭제</button>
-									<input type="range" value="@camera.Degree" min="0" max="180" step="1" disabled="@((!IsReceivedAcks[camera.Id]) ??= true)" @onchange="(args)=>Send(args, camera.Id)" />
+									<input type="range" value="@camera.Degree" min="0" max="180" step="1" disabled="@(!(IsReceivedAcks[camera.Id]))" @onchange="(args)=>Send(args, camera.Id)" />
 								</td>
 							</tr>
 						}

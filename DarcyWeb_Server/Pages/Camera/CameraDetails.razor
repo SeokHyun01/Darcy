@@ -125,10 +125,17 @@ else
 			IsLoading = false;
 			StateHasChanged();
 
+			var callBody = new CallBody
+				{
+					UserId = UserId.ToString(),
+					CameraId = CameraId
+				};
+			var call = JsonSerializer.Serialize<CallBody>(callBody);
+
 			var applicationMessage = new MqttApplicationMessageBuilder()
-					.WithTopic("call/start")
-					.WithPayload($"{UserId.ToString()}/{CameraId.ToString()}")
-					.Build();
+						.WithTopic("call/start")
+						.WithPayload(call)
+						.Build();
 
 			await MqttClient.PublishAsync(applicationMessage, CancellationToken.None);
 		}

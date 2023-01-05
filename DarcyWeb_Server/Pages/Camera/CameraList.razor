@@ -75,7 +75,7 @@
 	public Guid UserId { get; set; }
 
 	public bool IsLoading { get; set; }
-	public List<bool> IsReceivedAcks { get; set; } = new List<bool>();
+	public Dictionary<int, bool> IsReceivedAcks { get; set; } = new();
 
 	private List<CameraDTO> Cameras { get; set; } = new List<CameraDTO>();
 	private IMqttClient? MqttClient { get; set; }
